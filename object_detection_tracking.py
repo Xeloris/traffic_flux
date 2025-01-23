@@ -8,8 +8,6 @@ from deep_sort.deep_sort import nn_matching
 from deep_sort.deep_sort.detection import Detection
 from deep_sort.tools import generate_detections as gdet
 
-from helper import create_video_writer
-
 conf_threshold = 0.5
 max_cosine_distance = 0.4
 nn_budget = None
@@ -25,7 +23,6 @@ start_line_C = (895, 480)
 end_line_C = (1165, 480)
 
 video_cap = cv2.VideoCapture("traffic.mp4")
-writer = create_video_writer(video_cap, "output.mp4")
 
 model = YOLO("yolov8s.pt")
 
@@ -145,10 +142,8 @@ while True:
     cv2.putText(frame, f"{counter_C}", (1040, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
     
     cv2.imshow("Output", frame)
-    writer.write(frame)
     if cv2.waitKey(1) == ord("q"):
         break
 
 video_cap.release()
-writer.release()
 cv2.destroyAllWindows()
