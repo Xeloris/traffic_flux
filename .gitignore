@@ -1,0 +1,11 @@
+**/.vscode
+**/target
+
+### IntelliJ IDEA ###
+**/.idea
+**/.__pycache__
+*.iws
+*.iml
+*.ipr
+
+**settings.xml
