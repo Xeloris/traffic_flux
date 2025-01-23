@@ -8,13 +8,13 @@ from deep_sort.deep_sort import nn_matching
 from deep_sort.deep_sort.detection import Detection
 from deep_sort.tools import generate_detections as gdet
 
-conf_threshold = 0.5
-max_cosine_distance = 0.4
-nn_budget = None
-points = [deque(maxlen=32) for _ in range(1000)]
-counter_A = 0
-counter_B = 0
-counter_C = 0
+# Paramètres de détection et de suivi
+conf_threshold = 0.5  # Seuil de confiance pour filtrer les détections faibles
+max_cosine_distance = 0.4  # Paramètre pour la distance cosine dans le suivi
+nn_budget = None  # Pas de limite pour le nombre de voisins dans le suivi
+points = [deque(maxlen=32) for _ in range(1000)]  # Liste pour stocker les vehicules en circulation
+
+# Coordonnées des lignes
 start_line_A = (0, 480)
 end_line_A = (480, 480)
 start_line_B = (525, 480)
@@ -22,17 +22,18 @@ end_line_B = (745, 480)
 start_line_C = (895, 480)
 end_line_C = (1165, 480)
 
+counter_A = 0
+counter_B = 0
+counter_C = 0
+
 video_cap = cv2.VideoCapture("traffic.mp4")
 
+# Chargement du modèle et des fichiers de configuration
 model = YOLO("yolov8s.pt")
-
 model_filename = "config/mars-small128.pb"
 encoder = gdet.create_box_encoder(model_filename, batch_size=1)
-metric = nn_matching.NearestNeighborDistanceMetric(
-    "cosine", max_cosine_distance, nn_budget)
+metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
 tracker = Tracker(metric)
-
-# Chargement des labels de classe COCO sur lesquelles le modèle YOLO a été formé
 classes_path = "config/coco.names"
 with open(classes_path, "r") as f:
     class_names = f.read().strip().split("\n")
@@ -44,17 +45,20 @@ colors = np.random.randint(0, 255, size=(len(class_names), 3))  # (80, 3)
 while True:
     ret, frame = video_cap.read()
     overlay = frame.copy()
-    
+
+    # Tracage des troix lignes ( 1 pour chaque voie)
     cv2.line(frame, start_line_A, end_line_A, (0, 255, 0), 12)
     cv2.line(frame, start_line_B, end_line_B, (255, 0, 0), 12)
     cv2.line(frame, start_line_C, end_line_C, (0, 0, 255), 12)
-    
+
+    # Ajout des trois lignes sur les images de la video
     frame = cv2.addWeighted(overlay, 0.5, frame, 0.5, 0)
 
     if not ret:
-        print("End of the video file...")
+        print("Fin de la vidéo")
         break
 
+    # Utilisation de YOLO pour detecter les objets
     results = model(frame)
 
     for result in results:
@@ -70,7 +74,7 @@ while True:
             h = int(y2) - int(y1)
             class_id = int(class_id)
 
-            # Filtre des prédictions faibles en s'assurant que la confiance est supérieure à la confiance minimale
+            # Filtre des prédictions faibles
             if confidence > conf_threshold:
                 bboxes.append([x, y, w, h])
                 confidences.append(confidence)
@@ -81,8 +85,10 @@ while True:
     # Récupération des caractéristiques des elements
     features = encoder(frame, bboxes)
 
+    # Création des objets de détection pour le tracker
     dets = []
     for bbox, conf, class_name, feature in zip(bboxes, confidences, names, features):
+        # Pour permettre de detecter une collision avec une ligne
         dets.append(Detection(bbox, conf, class_name, feature))
 
     tracker.predict()
@@ -118,12 +124,7 @@ while True:
         last_point_x = points[track_id][0][0]
         last_point_y = points[track_id][0][1]
 
-        # cv2.circle(frame, (center_x, center_y), 4, (0, 255, 0), -1)
-        # cv2.circle(frame, (int(last_point_x), int(last_point_y)), 4, (255, 0, 255), -1)
-
-        # Si la coordonnée y du point central est en dessous de la ligne et que la coordonnée x est
-        # entre les points de départ et d'arrivée de la ligne et que le dernier point est au-dessus de la ligne,
-        # incrémentez le nombre total de voitures traversant la ligne et supprimez les points centraux de la liste
+        # Vérifie si le vehicule a passé la ligne de sa voie
         if center_y > start_line_A[1] and start_line_A[0] < center_x < end_line_A[0] and last_point_y < start_line_A[1]:
             counter_A += 1
             points[track_id].clear()
