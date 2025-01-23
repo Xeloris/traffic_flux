@@ -28,6 +28,13 @@ counter_C = 0
 
 video_cap = cv2.VideoCapture("traffic.mp4")
 
+# Récupérer la largeur et la hauteur du cadre de la vidéo d'entrée pour le VideoWriter
+frame_width = int(video_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(video_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+# Initialiser le VideoWriter pour enregistrer la vidéo de sortie
+out = cv2.VideoWriter('output_video.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width, frame_height))
+
 # Chargement du modèle et des fichiers de configuration
 model = YOLO("yolov8s.pt")
 model_filename = "config/mars-small128.pb"
@@ -114,37 +121,13 @@ while True:
                       (x1 + len(text) * 12, y1), (B, G, R), -1)
         cv2.putText(frame, text, (x1 + 5, y1 - 8),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        
-        center_x = int((x1 + x2) / 2)
-        center_y = int((y1 + y2) / 2)
 
-        # Ajouter du point central de l'objet à la liste points
-        points[track_id].append((center_x, center_y))
-
-        last_point_x = points[track_id][0][0]
-        last_point_y = points[track_id][0][1]
-
-        # Vérifie si le vehicule a passé la ligne de sa voie
-        if center_y > start_line_A[1] and start_line_A[0] < center_x < end_line_A[0] and last_point_y < start_line_A[1]:
-            counter_A += 1
-            points[track_id].clear()
-        elif center_y > start_line_B[1] and start_line_B[0] < center_x < end_line_B[0] and last_point_y < start_line_A[1]:
-            counter_B += 1
-            points[track_id].clear()
-        elif center_y > start_line_C[1] and start_line_C[0] < center_x < end_line_C[0] and last_point_y < start_line_A[1]:
-            counter_C += 1
-            points[track_id].clear()
-    
-    cv2.putText(frame, "A", (60, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    cv2.putText(frame, "B", (535, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    cv2.putText(frame, "C", (905, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    cv2.putText(frame, f"{counter_A} voiture(s)", (245, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    cv2.putText(frame, f"{counter_B} voiture(s)", (590, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    cv2.putText(frame, f"{counter_C} voiture(s)", (1015, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-    
+    out.write(frame)
+q
     cv2.imshow("Output", frame)
     if cv2.waitKey(1) == ord("q"):
         break
 
 video_cap.release()
+out.release()
 cv2.destroyAllWindows()
