@@ -15,12 +15,12 @@ nn_budget = None  # Pas de limite pour le nombre de voisins dans le suivi
 points = [deque(maxlen=32) for _ in range(1000)]  # Liste pour stocker les vehicules en circulation
 
 # Coordonnées des lignes
-start_line_A = (0, 480)
-end_line_A = (480, 480)
+start_line_A = (50, 480)
+end_line_A = (500, 480)
 start_line_B = (525, 480)
-end_line_B = (745, 480)
+end_line_B = (725, 480)
 start_line_C = (895, 480)
-end_line_C = (1165, 480)
+end_line_C = (1200, 480)
 
 counter_A = 0
 counter_B = 0
@@ -47,9 +47,9 @@ while True:
     overlay = frame.copy()
 
     # Tracage des troix lignes ( 1 pour chaque voie)
-    cv2.line(frame, start_line_A, end_line_A, (0, 255, 0), 12)
-    cv2.line(frame, start_line_B, end_line_B, (255, 0, 0), 12)
-    cv2.line(frame, start_line_C, end_line_C, (0, 0, 255), 12)
+    cv2.line(frame, start_line_A, end_line_A, (0, 255, 0), 16)
+    cv2.line(frame, start_line_B, end_line_B, (255, 0, 0), 18)
+    cv2.line(frame, start_line_C, end_line_C, (0, 0, 255), 20)
 
     # Ajout des trois lignes sur les images de la video
     frame = cv2.addWeighted(overlay, 0.5, frame, 0.5, 0)
@@ -135,12 +135,12 @@ while True:
             counter_C += 1
             points[track_id].clear()
     
-    cv2.putText(frame, "A", (10, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, "B", (530, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, "C", (910, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, f"{counter_A}", (270, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, f"{counter_B}", (620, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    cv2.putText(frame, f"{counter_C}", (1040, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.putText(frame, "A", (60, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    cv2.putText(frame, "B", (535, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    cv2.putText(frame, "C", (905, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    cv2.putText(frame, f"{counter_A} voiture(s)", (245, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    cv2.putText(frame, f"{counter_B} voiture(s)", (590, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    cv2.putText(frame, f"{counter_C} voiture(s)", (1015, 483), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
     
     cv2.imshow("Output", frame)
     if cv2.waitKey(1) == ord("q"):
